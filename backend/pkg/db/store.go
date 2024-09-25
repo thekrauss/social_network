@@ -54,7 +54,7 @@ func (s *DBStore) ApplyMigrations(db *sql.DB) error {
 		return err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://backend/pkg/db/migrations/sqlite", // Assure-toi que ce chemin est correct
+		"file://backend/pkg/db/migrations/sqlite",
 		"sqlite3", driver)
 	if err != nil {
 		return err
