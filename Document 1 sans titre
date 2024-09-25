@@ -1,0 +1,21 @@
+S network/
+│
+├── frontend/          # Dossier pour le code frontend
+│   ├── public/        # Fichiers statiques (images, index.html, etc.)
+│   ├── src/           # Code source du frontend (JS, CSS, etc.)
+│   │   ├── components/  # Composants UI (boutons, menus, etc.)
+│   │   ├── pages/       # Pages principales (home, profil, etc.)
+│   │   ├── services/    # Services pour les appels API
+│   ├── package.json    # Fichier de configuration npm
+│   └── Dockerfile      # Dockerfile pour containeriser le frontend
+│
+├── backend/           # Dossier pour le code backend
+│   ├── pkg/
+│   │   ├── db/        # Gestion des migrations et accès à la BDD
+│   │   ├── models/    # Modèles pour représenter les tables de la BDD
+│   │   ├── handlers/  # Gestion des routes HTTP et WebSockets
+│   ├── server.go      # Point d’entrée de l’application backend
+│   └── Dockerfile     # Dockerfile pour containeriser le backend
+│
+├── docker-compose.yml  # Fichier pour coordonner le backend et le frontend
+└── README.md           # Documentation du projet
