@@ -20,7 +20,7 @@ type DBStore struct{}
 
 func (s *DBStore) OpenDatabase() (*sql.DB, error) {
 
-	db, err := sql.Open("sqlite3", "db/s_network.DB")
+	db, err := sql.Open("sqlite3", "pkg/db/data.DB")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -54,17 +54,19 @@ func (s *DBStore) ApplyMigrations(db *sql.DB) error {
 		return err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://backend/pkg/db/migrations/sqlite",
+		"file://pkg/db/migrations/sqlite",
 		"sqlite3", driver)
 	if err != nil {
 		return err
 	}
 
-	// Applique les migrations
+	// applique les migrations
+	log.Println("Applying migrations...")
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return err
+		log.Printf("Error applying migration: %v", err)
+		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
-
 	log.Println("Migrations applied successfully")
+
 	return nil
 }

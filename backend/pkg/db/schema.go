@@ -2,7 +2,7 @@ package db
 
 var (
 	Users_tables = `CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+    	id TEXT PRIMARY KEY,  
 		username TEXT UNIQUE NOT NULL,        -- Nom d'utilisateur unique
 		email TEXT UNIQUE NOT NULL,           -- Adresse email unique
 		password_hash TEXT NOT NULL,          -- Hachage du mot de passe (utiliser bcrypt ou une autre méthode de hachage)

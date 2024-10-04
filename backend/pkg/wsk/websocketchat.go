@@ -1,5 +1,6 @@
 package wsk
 
+/*
 func NewWebsocketChat() *WebsocketChat {
 	w := &WebsocketChat{
 		Users:          make(map[string]*UserChat),
@@ -11,3 +12,4 @@ func NewWebsocketChat() *WebsocketChat {
 	go w.UsersChatManager()
 	return w
 }
+*/

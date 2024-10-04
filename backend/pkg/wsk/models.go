@@ -1,5 +1,6 @@
 package wsk
 
+/*
 import (
 	"sync"
 	"time"
@@ -46,7 +47,7 @@ type Channel struct {
 }
 
 /*----------------------------------------------------------*/
-
+/*
 func NewUserChat(channels *Channel, username string, conn *websocket.Conn) *UserChat {
 	return &UserChat{
 		Channels:   channels,
@@ -66,3 +67,4 @@ func NewWebsocketChat() *WebsocketChat {
 	go w.UsersChatManager()
 	return w
 }
+*/

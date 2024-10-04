@@ -1,15 +1,14 @@
-package backend
+package main
 
 import (
+	"backend/pkg/controllers"
+	"backend/pkg/db"
 	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"s-network/pkg/db"
-	"s-network/pkg/handlers"
-	"s-network/pkg/wsk"
 	"syscall"
 	"time"
 )
@@ -24,8 +23,8 @@ func main() {
 // Fonction principale pour exécuter le serveur
 func run() error {
 	store := &db.DBStore{}
-	wsChat := wsk.NewWebsocketChat()
-	srv := handlers.NewServer(store, wsChat)
+	//wsChat := wsk.NewWebsocketChat()
+	srv := controllers.NewServer(store /*, wsChat*/)
 
 	db, err := store.OpenDatabase()
 	if err != nil {
@@ -60,7 +59,7 @@ func run() error {
 
 	// Goroutine pour gérer le chat WebSocket
 	go func() {
-		wsChat.UsersChatManager()
+		//wsChat.UsersChatManager()
 	}()
 
 	if err := srv.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
