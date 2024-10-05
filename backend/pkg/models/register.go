@@ -1,4 +1,4 @@
-package controllers
+package models
 
 import (
 	"time"
@@ -16,8 +16,8 @@ type User struct {
 	Email       string    `json:"email"`
 	Password    string    `json:"password"`
 	Role        string    `json:"role"`
-	DateOfBirth string    `json:"date_of_birth"` // Assuming string format for now
-	Avatar      string    `json:"avatar"`        // URL or path to the avatar image
+	DateOfBirth string    `json:"date_of_birth"`
+	Avatar      string    `json:"avatar"`
 	Bio         string    `json:"bio"`
 	Phone       string    `json:"phone"`
 	Address     string    `json:"address"`

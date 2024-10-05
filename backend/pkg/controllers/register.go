@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"backend/pkg/db"
+	"backend/pkg/models"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -19,7 +20,7 @@ func (s MyServer) RegisterHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 
-			var user User
+			var user models.User
 			if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 				log.Println("Failed to decode request payload:", err)
 				http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -74,7 +75,7 @@ func (s MyServer) RegisterHandler() http.HandlerFunc {
 			}
 
 			// Réponse de succès
-			response := Response{
+			response := models.Response{
 				Message: "User registered successfully",
 				User:    user,
 			}
@@ -91,7 +92,7 @@ func (s MyServer) RegisterHandler() http.HandlerFunc {
 	}
 }
 
-func RegisterUser(w http.ResponseWriter, r *http.Request, DB *sql.DB, user User) error {
+func RegisterUser(w http.ResponseWriter, r *http.Request, DB *sql.DB, user models.User) error {
 	// Validation de l'email
 	if !isValidEmail(user.Email) {
 		return errors.New("invalid email format")
@@ -105,7 +106,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, DB *sql.DB, user User)
 	return nil
 }
 
-func CreateUser(db *sql.DB, user User) error {
+func CreateUser(db *sql.DB, user models.User) error {
 	var countEmail, countUsername int
 
 	err := db.QueryRow("SELECT COUNT(*) FROM users WHERE email = ?", user.Email).Scan(&countEmail)
