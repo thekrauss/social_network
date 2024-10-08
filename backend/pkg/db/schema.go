@@ -97,4 +97,20 @@ var (
 			created_at DATETIME NOT NULL,
 			FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 		);`
+
+	Unlikes_Table = `CREATE TABLE IF NOT EXISTS unlikes (
+			id TEXT PRIMARY KEY,
+			user_id TEXT NOT NULL,
+			post_id TEXT NOT NULL,
+			FOREIGN KEY (user_id) REFERENCES users(id),
+			FOREIGN KEY (post_id) REFERENCES posts(id)
+		);`
+
+	UnlikesComment_Table = `CREATE TABLE IF NOT EXISTS unlikescomment (
+		id TEXT PRIMARY KEY,
+		user_id TEXT NOT NULL,
+		comment_id TEXT NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id),
+		FOREIGN KEY (comment_id) REFERENCES comment(id)
+	);`
 )
