@@ -11,10 +11,10 @@ S network/
 │
 ├── backend/           # Dossier pour le code backend
 │   ├── pkg/
-│   │   ├── db/        # Gestion des migrations et accès à la BDD
+│   │   ├── db/ migrations /sqlite       # Gestion des migrations et accès à la BDD
 │   │   ├── models/    # Modèles pour représenter les tables de la BDD
-│   │   ├── handlers/  # Gestion des routes HTTP et WebSockets
-│   ├── server.go      # Point d’entrée de l’application backend
+│   │   ├── contollers/  # Gestion des routes HTTP et WebSockets
+│   ├── main.go      # Point d’entrée de l’application backend
 │   └── Dockerfile     # Dockerfile pour containeriser le backend
 │
 ├── docker-compose.yml  # Fichier pour coordonner le backend et le frontend
