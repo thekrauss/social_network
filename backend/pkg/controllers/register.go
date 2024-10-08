@@ -56,7 +56,7 @@ func (s MyServer) RegisterHandler() http.HandlerFunc {
 			}
 
 			// Crée la table si elle n'existe pas déjà
-			_, err = DB.Exec(db.Users_tables)
+			_, err = DB.Exec(db.Users_table)
 			if err != nil {
 				log.Println("Error creating users table:", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
