@@ -33,7 +33,7 @@ func (s *MyServer) PostHandlers() http.HandlerFunc {
 		// gestion du téléchargement d'image
 		var imagesPath string
 		file, handler, err := r.FormFile("image")
-		if err == nil { // S'il y a un fichier image dans la requête
+		if err == nil {
 			defer file.Close()
 
 			// vérification de l'extension de l'image
@@ -52,7 +52,7 @@ func (s *MyServer) PostHandlers() http.HandlerFunc {
 			post.ImagePath = imagesPath
 		}
 
-		//  l'ID de l'utilisateur à partir du contexte en tant qu'UUID
+		//  l'ID de l'utilisateur à partir du contexte
 		userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 		if !ok {
 			log.Println("User ID not found in context")
@@ -70,7 +70,6 @@ func (s *MyServer) PostHandlers() http.HandlerFunc {
 
 		post.ID = postID
 
-		// envoi  la réponse de succès
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(post)
 	}

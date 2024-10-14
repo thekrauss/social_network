@@ -9,7 +9,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func (s *MyServer) LikePostHandler() http.HandlerFunc {
+func (s *MyServer) LikePost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Failed to parse form", http.StatusBadRequest)
@@ -43,7 +43,7 @@ func (s *MyServer) LikePostHandler() http.HandlerFunc {
 	}
 }
 
-func (s *MyServer) UnlikePostHandler() http.HandlerFunc {
+func (s *MyServer) UnlikePost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Failed to parse form", http.StatusBadRequest)

@@ -9,7 +9,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func (s *MyServer) LikeCommentHandler() http.HandlerFunc {
+func (s *MyServer) LikeComment() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -47,6 +47,59 @@ func (s *MyServer) LikeCommentHandler() http.HandlerFunc {
 		}
 
 		if err := ToggleLikeComment(userID, commentID, tx); err != nil {
+			tx.Rollback()
+			http.Error(w, "Failed to toggle like", http.StatusInternalServerError)
+			return
+		}
+
+		if err := tx.Commit(); err != nil {
+			http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Comment like toggled successfully"})
+	}
+}
+
+func (s *MyServer) UnLikeComment() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+			return
+		}
+
+		err := r.ParseForm()
+		if err != nil || r.FormValue("comment_id") == "" {
+			http.Error(w, "Comment ID not provided", http.StatusBadRequest)
+			return
+		}
+		commentID, err := uuid.FromString(r.FormValue("comment_id"))
+		if err != nil {
+			http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+			return
+		}
+
+		userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+		if !ok {
+			http.Error(w, "User ID not found", http.StatusUnauthorized)
+			return
+		}
+
+		DB, err := s.Store.OpenDatabase()
+		if err != nil {
+			http.Error(w, "Failed to open database", http.StatusInternalServerError)
+			return
+		}
+		defer DB.Close()
+
+		tx, err := DB.Begin()
+		if err != nil {
+			http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+			return
+		}
+
+		if err := ToggleUnLikeComment(userID, commentID, tx); err != nil {
 			tx.Rollback()
 			http.Error(w, "Failed to toggle like", http.StatusInternalServerError)
 			return

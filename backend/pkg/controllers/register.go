@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"backend/pkg/db"
 	"backend/pkg/models"
 	"database/sql"
 	"encoding/json"
@@ -38,7 +37,7 @@ func (s MyServer) RegisterHandler() http.HandlerFunc {
 				return
 			}
 
-			if !isValidGender(user.Gender) {
+			if !IsValidGender(user.Gender) {
 				http.Error(w, "Gender must be 'Homme' or 'Femme'.", http.StatusBadRequest)
 				return
 			}
@@ -55,30 +54,32 @@ func (s MyServer) RegisterHandler() http.HandlerFunc {
 				return
 			}
 
-			// Crée la table si elle n'existe pas déjà
-			_, err = DB.Exec(db.Users_table)
+			defer DB.Close()
+
+			tx, err := DB.Begin()
 			if err != nil {
-				log.Println("Error creating users table:", err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
 				return
 			}
 
-			defer DB.Close()
-
 			log.Println("Database and table ready")
 
-			// Inscription de l'utilisateur
 			if err := RegisterUser(w, r, DB, user); err != nil {
 				log.Println("Failed to create user:", err)
 				http.Error(w, "Failed to create user", http.StatusInternalServerError)
 				return
 			}
 
-			// Réponse de succès
 			response := models.Response{
 				Message: "User registered successfully",
 				User:    user,
 			}
+
+			if err := tx.Commit(); err != nil {
+				http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+				return
+			}
+
 			w.WriteHeader(http.StatusCreated)
 			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -94,7 +95,7 @@ func (s MyServer) RegisterHandler() http.HandlerFunc {
 
 func RegisterUser(w http.ResponseWriter, r *http.Request, DB *sql.DB, user models.User) error {
 	// Validation de l'email
-	if !isValidEmail(user.Email) {
+	if !IsValidEmail(user.Email) {
 		return errors.New("invalid email format")
 	}
 
@@ -170,7 +171,7 @@ func CreateUser(db *sql.DB, user models.User) error {
 	return nil
 }
 
-func isValidEmail(email string) bool {
+func IsValidEmail(email string) bool {
 	if email == "" {
 		return false
 	}
@@ -179,6 +180,6 @@ func isValidEmail(email string) bool {
 	return at > 0 && dot > at+1 && dot < len(email)-1
 }
 
-func isValidGender(gender string) bool {
+func IsValidGender(gender string) bool {
 	return gender == "Homme" || gender == "Femme"
 }
