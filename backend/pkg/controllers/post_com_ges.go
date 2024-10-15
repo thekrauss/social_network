@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"backend/pkg/db"
 	"backend/pkg/models"
 	"database/sql"
 	"errors"
@@ -11,12 +10,44 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func GetPosts(DB *sql.DB) ([]models.Post, error) {
-	if DB == nil {
-		return nil, errors.New("database connection is nil")
+func GetPostsWithPagination(db *sql.DB, limit int, offset int) ([]models.Post, error) {
+	query := `SELECT id, title, content, image_path, user_id, created_at FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	rows, err := db.Query(query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query posts: %w", err)
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		var post models.Post
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.UserID, &post.CreatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan post: %w", err)
+		}
+		posts = append(posts, post)
 	}
 
-	rows, err := DB.Query("SELECT p.id, p.title, p.content, p.image_path, p.user_id, p.created_at, p.category, u.username FROM posts p JOIN users u ON p.user_id = u.id")
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	return posts, nil
+}
+
+func GetVisiblePostsWithPagination(db *sql.DB, userID uuid.UUID, limit int, offset int) ([]models.Post, error) {
+	query := `
+		SELECT p.id, p.title, p.content, p.image_path, p.visibility, p.created_at
+		FROM posts p
+		LEFT JOIN followers f ON p.user_id = f.followed_id AND f.follower_id = ?
+		LEFT JOIN post_allowed_users pa ON p.id = pa.post_id AND pa.user_id = ?
+		WHERE p.visibility = 'public' 
+		OR (p.visibility = 'private' AND f.status = 'accepted')
+		OR (p.visibility = 'almost_private' AND pa.user_id IS NOT NULL)
+		ORDER BY p.created_at DESC
+		LIMIT ? OFFSET ?
+	`
+
+	rows, err := db.Query(query, userID, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -25,15 +56,12 @@ func GetPosts(DB *sql.DB) ([]models.Post, error) {
 	var posts []models.Post
 	for rows.Next() {
 		var post models.Post
-		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.UserID, &post.CreatedAt, &post.Category, &post.Username)
-		if err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Visibility, &post.CreatedAt); err != nil {
 			return nil, err
 		}
 		posts = append(posts, post)
 	}
-	if len(posts) == 0 {
-		log.Println("No posts found")
-	}
+
 	return posts, nil
 }
 
@@ -43,12 +71,7 @@ func (s *MyServer) StorePost(post models.Post) (uuid.UUID, error) {
 		return uuid.Nil, fmt.Errorf("failed to open database: %v", err)
 	}
 	defer DB.Close()
-	//  si la table 'posts' existe ou la créer
-	_, err = DB.Exec(db.Posts_table)
-	if err != nil {
-		log.Println("Error ensuring posts table exists:", err)
-		return uuid.Nil, fmt.Errorf("failed to ensure posts table exists: %v", err)
-	}
+
 	log.Println("Database and table ready")
 
 	//  l'UUID pour le nouveau post

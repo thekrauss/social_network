@@ -38,8 +38,8 @@ func (s MyServer) LoginHandler() http.HandlerFunc {
 
 			fmt.Println("ping to database successful")
 
-			identifier := r.FormValue("identifier")
-			password := r.FormValue("password")
+			identifier := strings.TrimSpace(r.FormValue("identifier"))
+			password := strings.TrimSpace(r.FormValue("password"))
 
 			log.Println("Login attempt with identifier:", identifier)
 			log.Println("Password provided:", password)
@@ -50,9 +50,9 @@ func (s MyServer) LoginHandler() http.HandlerFunc {
 				return
 			}
 
-			if len(identifier) < 6 || len(identifier) > 16 || len(password) < 6 || len(password) > 16 {
-				log.Println("Identifier and Password must be between 6 and 16 characters long")
-				http.Error(w, "Identifier and Password must be between 6 and 16 characters long", http.StatusBadRequest)
+			if len(identifier) < 3 || len(password) < 6 || len(password) > 16 {
+				log.Println("Invalid identifier or password length")
+				http.Error(w, "Invalid identifier or password length", http.StatusBadRequest)
 				return
 			}
 
@@ -62,44 +62,39 @@ func (s MyServer) LoginHandler() http.HandlerFunc {
 			if strings.Contains(identifier, "@") {
 				log.Println("Identified as email")
 				userID, err = GetUserIDbyEmail(DB, identifier)
-				if err != nil {
-					log.Println("Email does not exist", err)
+				if err == sql.ErrNoRows {
+					log.Println("Email does not exist:", identifier)
 					http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
+					return
+				} else if err != nil {
+					log.Println("Error retrieving user by email:", err)
+					http.Error(w, "Internal server error", http.StatusInternalServerError)
 					return
 				}
 				storedPassword, err = GetPasswordByEmail(DB, identifier)
 				if err != nil {
 					log.Println("Failed to retrieve password by email", err)
-					http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
+					http.Error(w, "Internal server error", http.StatusInternalServerError)
 					return
 				}
-
-				username, err = GetUsernameByEmail(DB, identifier)
-				if err != nil {
-					log.Println("Failed to retrieve username by email", err)
-					http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
-					return
-				}
-
 			} else {
 				log.Println("Identified as username")
 				userID, err = GetUserIDbyUsername(DB, identifier)
-				if err != nil {
-					if err == sql.ErrNoRows {
-						log.Println("Username does not exist:", identifier)
-					} else {
-						log.Println("Failed to retrieve user ID by username:", err)
-					}
+				if err == sql.ErrNoRows {
+					log.Println("Username does not exist:", identifier)
 					http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
+					return
+				} else if err != nil {
+					log.Println("Error retrieving user by username:", err)
+					http.Error(w, "Internal server error", http.StatusInternalServerError)
 					return
 				}
 				storedPassword, err = GetPasswordByUsername(DB, identifier)
 				if err != nil {
 					log.Println("Failed to retrieve password by username", err)
-					http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
+					http.Error(w, "Internal server error", http.StatusInternalServerError)
 					return
 				}
-				username = identifier
 			}
 
 			log.Println("UserID:", userID, "StoredPassword:", storedPassword)
@@ -119,9 +114,11 @@ func (s MyServer) LoginHandler() http.HandlerFunc {
 			}
 
 			http.SetCookie(w, &http.Cookie{
-				Name:    "token",
-				Value:   token,
-				Expires: time.Now().Add(24 * time.Hour),
+				Name:     "token",
+				Value:    token,
+				Expires:  time.Now().Add(24 * time.Hour),
+				HttpOnly: true,
+				Secure:   true,
 			})
 
 			// Set username cookie
