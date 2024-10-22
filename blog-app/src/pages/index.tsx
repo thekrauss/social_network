@@ -10,11 +10,11 @@ export default function HomePage() {
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
-    // Si le token existe, l'utilisateur est authentifié
+    //  existe, l'utilisateur est authentifié
     if (token) {
       setIsAuthenticated(true);
     } else {
-      // Rediriger vers la page de login si non authentifié
+      // vers la page de login si non authentifié
       router.push("/login");
     }
   }, []);
@@ -42,8 +42,7 @@ export default function HomePage() {
       {/* Contenu principal */}
       <div className="flex-1 p-8 bg-gray-100">
         <h1 className="text-3xl font-bold mb-4">Bienvenue sur la page d'accueil</h1>
-        {/* Ici, tu peux ajouter tous les composants de ton réseau */}
-        <p>C'est ici que se trouve le contenu de votre application.</p>
+        <p>le contenu l' application.</p>
       </div>
     </div>
   );
