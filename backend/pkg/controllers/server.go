@@ -30,7 +30,7 @@ type MyServer struct {
 	GitHubOAuthConfig *oauth2.Config // Configuration OAuth pour GitHub
 }
 
-// Fonction pour créer une nouvelle instance de MyServer
+// créer une nouvelle instance de MyServer
 func NewServer(store db.Store /*, wsChat *wsk.WebsocketChat*/) *MyServer {
 
 	router := http.NewServeMux() // Initialisation du routeur HTTP

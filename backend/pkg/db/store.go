@@ -20,7 +20,7 @@ type DBStore struct{}
 
 func (s *DBStore) OpenDatabase() (*sql.DB, error) {
 
-	db, err := sql.Open("sqlite3", "pkg/db/data.DB")
+	db, err := sql.Open("sqlite3", "pkg/db/data.db")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}

@@ -18,3 +18,13 @@ type Post struct {
 	Username     string      `json:"username" validate:"required"`
 	AllowedUsers []uuid.UUID `json:"allowed_users,omitempty"` // Utilisateurs autorisés pour les posts "almost_private"
 }
+
+type PostGroup struct {
+	ID        uuid.UUID `json:"id"`
+	GroupID   uuid.UUID `json:"group_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Title     string    `json:"title" validate:"required"`
+	Content   string    `json:"content" validate:"required"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}

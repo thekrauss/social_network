@@ -35,14 +35,28 @@ func (s *MyServer) UpdateProfileHandler() http.HandlerFunc {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		defer DB.Close()
 
+		// Commencer une transaction
 		tx, err := DB.Begin()
 		if err != nil {
 			http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
 			return
 		}
-		defer tx.Rollback()
+
+		commitErr := func() error {
+			if err != nil {
+				return tx.Rollback()
+			}
+			return tx.Commit()
+		}
+
+		defer func() {
+			if commitErr() != nil {
+				log.Println("Transaction failed to commit/rollback")
+			}
+		}()
+
+		log.Println("Database and table ready")
 
 		// Nettoyer les champs texte
 		updatedUser.FirstName = strings.TrimSpace(updatedUser.FirstName)
@@ -64,7 +78,7 @@ func (s *MyServer) UpdateProfileHandler() http.HandlerFunc {
 			return
 		}
 
-		if updatedUser.Phone != "" && !IsValidPhoneNumber(updatedUser.Phone) {
+		if updatedUser.PhoneNumber != "" && !IsValidPhoneNumber(updatedUser.PhoneNumber) {
 			http.Error(w, "Invalid phone number format", http.StatusBadRequest)
 			return
 		}
@@ -94,7 +108,7 @@ func (s *MyServer) UpdateProfileHandler() http.HandlerFunc {
 
 		// Mise à jour des champs dans la base de données
 		query := `UPDATE users SET first_name = ?, last_name = ?, email = ?, gender = ?, avatar = ?, bio = ?, phone_number = ?, address = ?, is_private = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-		_, err = DB.Exec(query, updatedUser.FirstName, updatedUser.LastName, updatedUser.Email, updatedUser.Gender, updatedUser.Avatar, updatedUser.Bio, updatedUser.Phone, updatedUser.Address, updatedUser.IsPrivate, userID)
+		_, err = DB.Exec(query, updatedUser.FirstName, updatedUser.LastName, updatedUser.Email, updatedUser.Gender, updatedUser.Avatar, updatedUser.Bio, updatedUser.PhoneNumber, updatedUser.Address, updatedUser.IsPrivate, userID)
 
 		if err != nil {
 			log.Println("Failed to update user profile:", err)
@@ -182,7 +196,7 @@ func checkUser(db *sql.DB, user models.User, userID uuid.UUID) error {
 		return fmt.Errorf("username already exists")
 	}
 
-	err = db.QueryRow("SELECT COUNT(*) FROM users WHERE phone = ? AND id != ?", user.Phone, userID).Scan(&countPhone)
+	err = db.QueryRow("SELECT COUNT(*) FROM users WHERE phone = ? AND id != ?", user.PhoneNumber, userID).Scan(&countPhone)
 	if err != nil {
 		log.Println("Failed to check phone exist:", err)
 		return fmt.Errorf("failed to check phone exist: %w", err)

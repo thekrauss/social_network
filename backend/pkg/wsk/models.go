@@ -1,29 +1,24 @@
 package wsk
 
-/*
 import (
 	"sync"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/websocket"
 )
 
 type Message struct {
-	ID             int       `json:"id"`
-	SenderUsername string    `json:"senderUsername"`
-	TargetUsername string    `json:"targetUsername"`
-	Content        string    `json:"content"`
+	ID             uuid.UUID `json:"id" validate:"required"`
+	SenderID       uuid.UUID `json:"sender_id" validate:"required"`
+	SenderUsername string    `json:"sender_username" validate:"required"`
+	RecipientID    uuid.UUID `json:"recipient_id,omitempty"`
+	GroupID        uuid.UUID `json:"group_id,omitempty"`
+	Content        string    `json:"content" validate:"required"`
+	Emoji          string    `json:"emoji,omitempty"`
+	CreatedAt      time.Time `json:"created_at" default:"CURRENT_TIMESTAMP"`
 	Timestamp      time.Time `json:"timestamp"`
-	IsTyping       bool      `json:"isTyping"`
-	Type           string    `json:"type"`
-}
-
-type Message struct {
-	ID         uuid.UUID `json:"id" validate:"required"`
-	SenderID   uuid.UUID `json:"sender_id" validate:"required"`
-	RecipientID uuid.UUID `json:"recipient_id" validate:"required"`
-	Content    string    `json:"content" validate:"required"`
-	CreatedAt  time.Time `json:"created_at" default:"CURRENT_TIMESTAMP"`
+	MessageType    string    `json:"message_type" validate:"oneof=text emoji"`
 }
 
 type Notification struct {
@@ -68,43 +63,22 @@ type WebsocketChat struct {
 }
 
 type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	IsPublic bool      `json:"is_public"`
 }
 
 type UserChat struct {
 	Channels   *Channel
 	Username   string
 	Connection *websocket.Conn
+	IsPublic   bool `json:"is_public"`
 }
-
-type userChannel chan *userChannel
-type messageChannel chan *messageChannel
 
 type Channel struct {
-	messageChannel messageChannel
-	leaveChannel   userChannel
+	MessageChannel messageChannel
+	LeaveChannel   userChannel
 }
 
-/*----------------------------------------------------------*/
-/*
-func NewUserChat(channels *Channel, username string, conn *websocket.Conn) *UserChat {
-	return &UserChat{
-		Channels:   channels,
-		Username:   username,
-		Connection: conn,
-	}
-}
-
-func NewWebsocketChat() *WebsocketChat {
-	w := &WebsocketChat{
-		Users:          make(map[string]*UserChat),
-		JoinChannel:    make(userChannel),
-		LeaveChannel:   make(userChannel),
-		MessageChannel: make(messageChannel),
-		MessageHistory: make(map[string][]*Message),
-	}
-	go w.UsersChatManager()
-	return w
-}
-*/
+type userChannel chan *UserChat
+type messageChannel chan *Message

@@ -28,7 +28,7 @@ func GetUsernameByEmail(db *sql.DB, email string) (string, error) {
 
 func GetPasswordByEmail(db *sql.DB, email string) (string, error) {
 	var passWordId string
-	err := db.QueryRow("SELECT password FROM users WHERE email = ?", email).Scan(&passWordId)
+	err := db.QueryRow("SELECT password_hash FROM users WHERE email = ?", email).Scan(&passWordId)
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +59,7 @@ func GetUserIDbyUsername(db *sql.DB, username string) (uuid.UUID, error) {
 
 func GetPasswordByUsername(db *sql.DB, username string) (string, error) {
 	var password string
-	query := "SELECT password FROM users WHERE username = ?"
+	query := "SELECT password_hash FROM users WHERE username = ?"
 	err := db.QueryRow(query, username).Scan(&password)
 	if err != nil {
 		if err == sql.ErrNoRows {

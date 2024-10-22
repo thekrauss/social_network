@@ -10,7 +10,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-func GetPostsWithPagination(db *sql.DB, limit int, offset int) ([]models.Post, error) {
+func GetProfilPostsWithPagination(db *sql.DB, limit int, offset int) ([]models.Post, error) {
 	query := `SELECT id, title, content, image_path, user_id, created_at FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	rows, err := db.Query(query, limit, offset)
 	if err != nil {
@@ -90,12 +90,12 @@ func (s *MyServer) StorePost(post models.Post) (uuid.UUID, error) {
 
 /*----------------------------------------------------------------------------------------------------------------*/
 
-func GetCommentsByPost(DB *sql.DB, postID uuid.UUID) ([]models.Comment, error) {
+func GetCommentsByPost(DB *sql.DB, postID uuid.UUID, offset, limit int) ([]models.Comment, error) {
 	if DB == nil {
 		return nil, errors.New("database connection is nil")
 	}
 
-	rows, err := DB.Query("SELECT id, content, post_id, user_id, created_at FROM comments WHERE post_id = ?", postID)
+	rows, err := DB.Query("SELECT id, content, post_id, user_id, created_at FROM comments WHERE post_id = ? LIMIT ? OFFSET ?", postID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +138,7 @@ func (s *MyServer) StoreComment(comment models.Comment) error {
 	return nil
 }
 
+/*
 func (s *MyServer) PostExists(postID uuid.UUID) bool {
 	DB, err := s.Store.OpenDatabase()
 	if err != nil {
@@ -154,3 +155,4 @@ func (s *MyServer) PostExists(postID uuid.UUID) bool {
 	}
 	return exists
 }
+*/

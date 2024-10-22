@@ -9,7 +9,7 @@ var (
 		first_name TEXT NOT NULL,            
 		last_name TEXT NOT NULL,              
 		role TEXT CHECK(role IN ('admin', 'moderator', 'user')) DEFAULT 'user',
-		gender TEXT CHECK(gender IN ('male', 'female', 'other')), 
+		gender TEXT CHECK(gender IN ('Homme', 'Femme', 'autre')), 
 		date_of_birth DATE NOT NULL,          
 		avatar TEXT,                          
 		bio TEXT,                             
@@ -53,8 +53,62 @@ var (
 		group_id TEXT NOT NULL,
 		user_id TEXT NOT NULL,
 		status TEXT CHECK(status IN ('pending', 'accepted')) DEFAULT 'pending',
+		role TEXT CHECK(role IN ('creator', 'member')) DEFAULT 'member',
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	GroupPosts = `CREATE TABLE IF NOT EXISTS group_posts (
+		id TEXT PRIMARY KEY,
+		group_id TEXT NOT NULL,
+		user_id TEXT NOT NULL,
+		title TEXT NOT NULL,
+		content TEXT NOT NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	GroupPostsComments = `CREATE TABLE IF NOT EXISTS group_posts_comments (
+		id TEXT PRIMARY KEY,
+		post_id TEXT NOT NULL,
+		content TEXT NOT NULL,
+		user_id TEXT NOT NULL,
+		username TEXT NOT NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (post_id) REFERENCES group_posts(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	GroupEvents = `CREATE TABLE IF NOT EXISTS group_events (
+		id TEXT PRIMARY KEY,
+		group_id TEXT NOT NULL,
+		user_id TEXT NOT NULL,
+		title TEXT NOT NULL,
+		description TEXT NOT NULL,
+		event_date DATETIME NOT NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	GroupsMessage = `CREATE TABLE group_messages (
+		id UUID PRIMARY KEY,
+		group_id UUID REFERENCES groups(id),
+		sender_id UUID REFERENCES users(id),
+		content TEXT,
+		emoji TEXT,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	EventResponses = `CREATE TABLE IF NOT EXISTS event_responses (
+		id TEXT PRIMARY KEY,
+		event_id TEXT NOT NULL,
+		user_id TEXT NOT NULL,
+		response TEXT CHECK(response IN ('Going', 'Not going')) NOT NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (event_id) REFERENCES group_events(id) ON DELETE CASCADE,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 
@@ -86,6 +140,13 @@ var (
 		visibility TEXT CHECK(visibility IN ('public', 'private', 'almost_private')) DEFAULT 'public',
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		image_path TEXT,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	PostsTableAllowed = `CREATE TABLE IF NOT EXISTS post_allowed_users (
+		post_id TEXT NOT NULL,
+		user_id TEXT NOT NULL,
+		FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 

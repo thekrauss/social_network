@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -21,19 +22,20 @@ func (s *MyServer) CreateCommentHandler() http.HandlerFunc {
 				http.Error(w, "Invalid request comment payload", http.StatusBadRequest)
 				return
 			}
-
+			/*s
 			if comment.PostID == uuid.Nil {
 				log.Println("Invalid post ID")
 				http.Error(w, "Invalid post ID", http.StatusBadRequest)
 				return
 			}
 
-			// Vérifier si le post_id existe dans la base de données
-			if !s.PostExists(comment.PostID) {
-				log.Println("Post ID does not exist")
-				http.Error(w, "Post ID does not exist", http.StatusBadRequest)
-				return
-			}
+				// Vérifier si le post_id existe dans la base de données
+				if !s.PostExists(comment.PostID) {
+					log.Println("Post ID does not exist")
+					http.Error(w, "Post ID does not exist", http.StatusBadRequest)
+					return
+				}
+			*/
 			comment.CreatedAt = time.Now()
 			userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
 			if !ok || userID == uuid.Nil {
@@ -61,7 +63,10 @@ func (s *MyServer) CreateCommentHandler() http.HandlerFunc {
 
 func (s *MyServer) ListCommentHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//  l'ID du post depuis l'URL
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 		query := r.URL.Query()
 		postIDStr := query.Get("post_id")
 		if postIDStr == "" {
@@ -83,8 +88,51 @@ func (s *MyServer) ListCommentHandler() http.HandlerFunc {
 		}
 		defer DB.Close()
 
+		// Commencer une transaction
+		tx, err := DB.Begin()
+		if err != nil {
+			http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+			return
+		}
+
+		commitErr := func() error {
+			if err != nil {
+				return tx.Rollback()
+			}
+			return tx.Commit()
+		}
+
+		defer func() {
+			if commitErr() != nil {
+				log.Println("Transaction failed to commit/rollback", err)
+			}
+		}()
+
+		// récupération des paramètres de pagination : page et limit
+		page := 1
+		limit := 10
+
+		// Parse des paramètres page et limit
+		queryParams := r.URL.Query()
+		if p := queryParams.Get("page"); p != "" {
+			page, err = strconv.Atoi(p)
+			if err != nil || page < 1 {
+				page = 1
+			}
+		}
+
+		if l := queryParams.Get("limit"); l != "" {
+			limit, err = strconv.Atoi(l)
+			if err != nil || limit < 1 {
+				limit = 10
+			}
+		}
+
+		offset := (page - 1) * limit
+		log.Printf("Fetching posts from database (page: %d, limit: %d)\n", page, limit)
+
 		//  les commentaires liés au postID
-		comments, err := GetCommentsByPost(DB, postID)
+		comments, err := GetCommentsByPost(DB, postID, offset, limit)
 		if err != nil {
 			http.Error(w, "Failed to retrieve comments", http.StatusInternalServerError)
 			return
@@ -92,6 +140,8 @@ func (s *MyServer) ListCommentHandler() http.HandlerFunc {
 
 		response := map[string]interface{}{
 			"comments": comments,
+			"page":     page,
+			"limilt":   limit,
 		}
 
 		w.Header().Set("Content-Type", "application/json")

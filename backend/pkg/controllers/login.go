@@ -36,6 +36,26 @@ func (s MyServer) LoginHandler() http.HandlerFunc {
 			}
 			defer DB.Close()
 
+			tx, err := DB.Begin()
+			if err != nil {
+				log.Printf("Failed to begin transaction: %v", err)
+				http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+				return
+			}
+
+			commitErr := func() error {
+				if err != nil {
+					return tx.Rollback()
+				}
+				return tx.Commit()
+			}
+
+			defer func() {
+				if commitErr() != nil {
+					log.Println("Transaction failed to commit/rollback")
+				}
+			}()
+
 			fmt.Println("ping to database successful")
 
 			identifier := strings.TrimSpace(r.FormValue("identifier"))
@@ -97,8 +117,6 @@ func (s MyServer) LoginHandler() http.HandlerFunc {
 				}
 			}
 
-			log.Println("UserID:", userID, "StoredPassword:", storedPassword)
-
 			err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password))
 			if err != nil {
 				log.Println("Incorrect password", err)
@@ -112,6 +130,8 @@ func (s MyServer) LoginHandler() http.HandlerFunc {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
+
+			log.Printf("Form data: identifier='%s', password='%s'", identifier, password)
 
 			http.SetCookie(w, &http.Cookie{
 				Name:     "token",
@@ -139,11 +159,17 @@ func (s MyServer) LoginHandler() http.HandlerFunc {
 
 func (s *MyServer) LogoutHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Supprimer le cookie de token
 		http.SetCookie(w, &http.Cookie{
-			Name:    "token",
-			Value:   "",
-			Expires: time.Now(),
+			Name:     "token",
+			Value:    "",
+			Expires:  time.Now(),
+			Path:     "/", // Assurez-vous que le chemin soit correct
+			HttpOnly: true,
 		})
+
+		// Envoyer une réponse de succès
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Logged out successfully"))
 	}
 }
@@ -151,5 +177,9 @@ func (s *MyServer) LogoutHandler() http.HandlerFunc {
 func SendJSONResponse(w http.ResponseWriter, response LoginResponses, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v", err)
+		http.Error(w, "Failed to send response", http.StatusInternalServerError)
+		return
+	}
 }
