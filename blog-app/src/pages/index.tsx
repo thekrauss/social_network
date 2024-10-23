@@ -2,7 +2,15 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { SidebarDemo } from "./ui/sidebar";
 import { motion } from "framer-motion";
-import { IconHeart, IconMessageCircle, IconSearch, IconCalendarEvent, IconMessage, IconChartLine } from "@tabler/icons-react";
+import {
+  IconHeart,
+  IconMessageCircle,
+  IconCalendarEvent,
+  IconPlus,
+  IconBell,  // Ajout de l'icône Bell
+  IconMessage,  // Ajout de l'icône Chat
+  IconUsersGroup // Ajout de l'icône Groupes
+} from "@tabler/icons-react";
 import Image from "next/image";
 
 export default function HomePage() {
@@ -29,21 +37,27 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-900">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-900 relative">
       <SidebarDemo />
-      <div className="flex-1 p-4 lg:p-8 bg-gray-800 shadow-lg rounded-lg m-5">
-        <div className="mb-6 flex">
-          <input
-            type="text"
-            placeholder="Rechercher..."
-            className="flex-1 p-4 text-gray-300 bg-gray-700 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-cyan-500"
-          />
-          <button className="ml-3 p-4 bg-cyan-600 rounded-lg text-white shadow hover:bg-cyan-500 transition duration-300">
-            <IconSearch className="h-5 w-5" />
+
+      {/* Main Content */}
+      <div className="flex-1 p-4 lg:p-8 bg-gray-800 shadow-lg rounded-lg m-5 relative">
+
+        {/* Global Header with Notifications, Chat, and Groups (Fixed Position) */}
+        <div className="fixed top-4 right-4 flex space-x-4 z-50 bg-gray-800 p-2 rounded-lg"> {/* Ajout de z-index et de fond */}
+          <button className="text-white">
+            <IconBell className="h-6 w-6" />
+          </button>
+          <button className="text-white">
+            <IconMessage className="h-6 w-6" />
+          </button>
+          <button className="text-white">
+            <IconUsersGroup className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Quick Action Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 mt-12"> {/* Ajustement de l'espacement avec mt-12 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -56,32 +70,37 @@ export default function HomePage() {
               <p>Découvrez les événements à venir dans votre réseau.</p>
             </div>
           </motion.div>
+
+          {/* Créer un post */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="p-6 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-500 transition duration-300 flex items-center"
+            className="p-6 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-500 transition duration-300 flex items-center"
           >
-            <IconMessage className="h-8 w-8 mr-3" />
+            <IconPlus className="h-8 w-8 mr-3" />
             <div>
-              <h3 className="text-xl font-bold mb-2">Messages</h3>
-              <p>Consultez vos conversations récentes et envoyez des messages.</p>
+              <h3 className="text-xl font-bold mb-2">Créer un Post</h3>
+              <p>Partagez vos pensées avec le réseau.</p>
             </div>
           </motion.div>
+
+          {/* Créer un événement */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
             className="p-6 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-500 transition duration-300 flex items-center"
           >
-            <IconChartLine className="h-8 w-8 mr-3" />
+            <IconPlus className="h-8 w-8 mr-3" />
             <div>
-              <h3 className="text-xl font-bold mb-2">Statistiques</h3>
-              <p>Visualisez vos performances récentes.</p>
+              <h3 className="text-xl font-bold mb-2">Créer un Événement</h3>
+              <p>Organisez un événement pour votre groupe ou réseau.</p>
             </div>
           </motion.div>
         </div>
 
+        {/* Recent Posts */}
         <div className="bg-gray-700 p-4 lg:p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-gray-300 mb-4">Vos Posts Récents</h2>
           <div className="space-y-4 lg:space-y-6">
@@ -89,13 +108,7 @@ export default function HomePage() {
               <div key={idx} className="p-6 bg-gray-800 shadow-lg rounded-lg hover:shadow-xl transition duration-300">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-4">
-                    <Image
-                      src="/avatar.jpg"
-                      alt="User avatar"
-                      width={50}
-                      height={50}
-                      className="rounded-full"
-                    />
+                    <Image src="/avatar.jpg" alt="User avatar" width={50} height={50} className="rounded-full" />
                     <div>
                       <h3 className="text-lg font-semibold text-gray-300">Username</h3>
                       <p className="text-gray-400 text-sm">Posté le 23 octobre 2024, 15h45</p>
@@ -104,9 +117,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-gray-400">
-                    Ceci est le contenu du post {post}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque at est non erat commodo facilisis.
-                  </p>
+                  <p className="text-gray-400">Ceci est le contenu du post {post}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque at est non erat commodo facilisis.</p>
                 </div>
 
                 <div className="flex items-center mt-4 space-x-4">
