@@ -50,36 +50,39 @@ export default function AuthPage() {
     e.preventDefault();
     setError("");
     setSuccess("");
-
+  
     if (!validateEmail(email)) {
       setError("Veuillez entrer un email valide.");
       return;
     }
-
+  
     try {
-      const response = await fetch("http://localhost:8080/login", {
+      const response = await fetch("http://localhost:8079/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password }), // Envoi sous forme de JSON
       });
-
+  
       if (!response.ok) {
         const errorResponse = await response.json();
         setError(`Erreur: ${errorResponse.message || "Échec de la connexion, vérifiez vos identifiants."}`);
       } else {
         const data = await response.json();
-        localStorage.setItem("authToken", data.token); // Stocker le token JWT
+        localStorage.setItem("authToken", data.token); // Stockage du token JWT
         setSuccess("Connexion réussie !");
         setTimeout(() => {
-          router.push("/"); // Redirection vers la page d'accueil après connexion
+          router.push("/"); // Redirection après succès
         }, 2000);
       }
     } catch (error) {
+      console.log("Erreur réseau : ", error);
       setError("Erreur réseau, veuillez réessayer.");
     }
   };
+  
+  
 
   // Gère la soumission du formulaire Register
   const handleRegisterSubmit = async (e) => {
@@ -90,7 +93,7 @@ export default function AuthPage() {
     // Validation de l'email et des autres champs à ajouter ici
 
     try {
-      const response = await fetch("http://localhost:8080/register", {
+      const response = await fetch("http://localhost:8079/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -109,7 +112,7 @@ export default function AuthPage() {
           email: "",
           password: "",
           firstName: "",
-          lastName: "",
+          lastName: "", 
           gender: "",
           dateOfBirth: "",
           avatar: "",
